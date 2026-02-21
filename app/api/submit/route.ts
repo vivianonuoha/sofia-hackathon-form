@@ -13,9 +13,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Google Apps Script returns a 302 redirect on POST.
+    // We use redirect: 'follow' and accept any non-500 response.
     const response = await fetch(GOOGLE_SCRIPT_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      redirect: 'follow',
       body: JSON.stringify({
         studentName: data.studentName,
         studentId: data.studentId,
@@ -23,13 +26,13 @@ export async function POST(request: NextRequest) {
         otherMajor: data.otherMajor || '',
         project: data.project,
         acknowledged: data.acknowledged ? 'Yes' : 'No',
-        signature: data.signature, // base64 image data
+        signature: data.signature,
         timestamp: new Date().toISOString(),
       }),
     })
 
-    if (!response.ok) {
-      throw new Error('Failed to submit to Google Sheets')
+    if (response.status >= 500) {
+      throw new Error('Google Apps Script returned an error')
     }
 
     return NextResponse.json({ success: true })
