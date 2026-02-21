@@ -27,9 +27,6 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString(),
     }
 
-    // Google Apps Script Web Apps always redirect (302) on POST.
-    // Using redirect: 'manual' lets us detect the redirect as success
-    // without following it (which can cause issues with method changes).
     const response = await fetch(GOOGLE_SCRIPT_URL, {
       method: 'POST',
       body: JSON.stringify(payload),
@@ -38,12 +35,10 @@ export async function POST(request: NextRequest) {
 
     console.log('Response status:', response.status)
 
-    // A 302 redirect means Google Apps Script received and processed it
     if (response.status === 302 || response.status === 200 || response.status === 201) {
       return NextResponse.json({ success: true })
     }
 
-    // If we get here, something unexpected happened
     const text = await response.text().catch(() => 'Could not read response')
     console.error('Unexpected response:', response.status, text)
     return NextResponse.json({ success: true })
